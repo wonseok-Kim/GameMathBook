@@ -55,6 +55,7 @@ void SoftRenderer::LoadScene2D()
 // 게임 로직과 렌더링 로직이 공유하는 변수
 Vector2 currentPosition;
 float currentScale = 10.f;
+float currentRad = 0.f;
 
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
@@ -68,14 +69,17 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float scaleMin = 5.f;
 	static float scaleMax = 20.f;
 	static float scaleSpeed = 20.f;
+	static float rotateSpeed = Math::PI;
 
 	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
 	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
 	float deltaScale = input.GetAxis(InputAxis::ZAxis) * scaleSpeed * InDeltaSeconds;
+	float deltaRad = input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds;
 
 	// 물체의 최종 상태 설정
 	currentPosition += deltaPosition;
 	currentScale = Math::Clamp(currentScale + deltaScale, scaleMin, scaleMax);
+	currentRad += deltaRad;
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -111,25 +115,36 @@ void SoftRenderer::Render2D()
 	}
 
 	// 각 값을 초기화한 후 색상을 증가시키면서 점에 대응
+	float sin = 0.f;
+	float cos = 0.f;
+	Math::GetSinCosRad(sin, cos, currentRad);
 	rad = 0.f;
-	for (auto const& v : hearts)
+	for (Vector2 v : hearts)
 	{
+		v *= currentScale;
+
+		float orgX = v.X;
+		v.X = cos * v.X - sin * v.Y;
+		v.Y = sin * orgX + cos * v.Y;
+
+		v += currentPosition;
+
 		hsv.H = rad / Math::TwoPI;
-		r.DrawPoint(v * currentScale + currentPosition, hsv.ToLinearColor());
+		r.DrawPoint(v, hsv.ToLinearColor());
 		rad += increment;
 	}
 
 	// 현재 위치와 스케일을 화면에 출력
 	r.PushStatisticText(std::string("Position : ") + currentPosition.ToString());
 	r.PushStatisticText(std::string("Scale : ") + std::to_string(currentScale));
+	r.PushStatisticText(std::string("CurrentRad : ") + std::to_string(currentRad));
+	r.PushStatisticText(std::string("sin : " + std::to_string(sin) + " cos : " + std::to_string(cos)));
 }
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
