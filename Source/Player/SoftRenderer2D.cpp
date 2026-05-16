@@ -109,9 +109,13 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	rad = 0.f;
+	HSVColor hsvColor{0.f, 1.f, 0.85f};
 	for (auto const& v : hearts)
 	{
-		r.DrawPoint(v * currentScale + currentPosition, LinearColor::Blue);
+		hsvColor.H = rad / Math::TwoPI;
+		r.DrawPoint(v * currentScale + currentPosition, hsvColor.ToLinearColor());
+		rad += increment;
 	}
 
 	// 현재 위치와 스케일을 화면에 출력
