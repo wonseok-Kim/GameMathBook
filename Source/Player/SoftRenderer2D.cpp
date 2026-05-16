@@ -53,6 +53,7 @@ void SoftRenderer::LoadScene2D()
 }
 
 // 게임 로직과 렌더링 로직이 공유하는 변수
+Vector2 currentPosition{ 0.f, 0.f };
 
 
 // 게임 로직을 담당하는 함수
@@ -63,7 +64,12 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	const InputManager& input = g.GetInputManager();
 
 	// 게임 로직의 로컬 변수
+	const float moveSpeed = 100.f;
+	const float xAxis = input.GetAxis(InputAxis::XAxis);
+	const float yAxis = input.GetAxis(InputAxis::YAxis);
 
+	Vector2 deltaPosition = Vector2{ xAxis , yAxis } * (InDeltaSeconds * moveSpeed);
+	currentPosition += deltaPosition;
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -76,16 +82,24 @@ void SoftRenderer::Render2D()
 	// 배경에 격자 그리기
 	DrawGizmo2D();
 
-	// 렌더링 로직의 로컬 변수
+	r.DrawLine(-currentPosition * 1000.f, currentPosition * 1000.f, LinearColor::DimGray);
 
+	// 렌더링 로직의 로컬 변수
+	r.DrawPoint(currentPosition, LinearColor::Blue);
+	r.DrawPoint(currentPosition + Vector2::UnitX, LinearColor::Blue);
+	r.DrawPoint(currentPosition - Vector2::UnitX, LinearColor::Blue);
+	r.DrawPoint(currentPosition + Vector2::UnitY, LinearColor::Blue);
+	r.DrawPoint(currentPosition - Vector2::UnitY, LinearColor::Blue);
+	r.DrawPoint(currentPosition + Vector2::One, LinearColor::Blue);
+	r.DrawPoint(currentPosition - Vector2::One, LinearColor::Blue);
+	r.DrawPoint(currentPosition + Vector2{ 1.f, -1.f }, LinearColor::Blue);
+	r.DrawPoint(currentPosition - Vector2{ 1.f, -1.f }, LinearColor::Blue);
 }
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
