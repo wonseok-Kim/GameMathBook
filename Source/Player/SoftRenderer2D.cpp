@@ -53,7 +53,8 @@ void SoftRenderer::LoadScene2D()
 }
 
 // 게임 로직과 렌더링 로직이 공유하는 변수
-
+Vector2 currentPosition{};
+float scale = 10.f;
 
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
@@ -63,7 +64,14 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	const InputManager& input = g.GetInputManager();
 
 	// 게임 로직의 로컬 변수
+	float moveSpeed = 50.f;
+	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
+	Vector2 deltaPosition = inputVector * (moveSpeed * InDeltaSeconds);
+	currentPosition += deltaPosition;
 
+	float inputZAxis = input.GetAxis(InputAxis::ZAxis);
+	float deltaScale = inputZAxis * moveSpeed * InDeltaSeconds;
+	scale = Math::Clamp(scale + deltaScale, 10.f, 50.f);
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -86,24 +94,32 @@ void SoftRenderer::Render2D()
 	{
 		for (rad = 0.f; rad < Math::TwoPI; rad += increment)
 		{
-			// 하트 방정식
-			// x와 y를 구하기.
-			// hearts.push_back(Vector2(x, y));
+			Vector2 point;
+			float sin = 0.f;
+			float cos = 0.f, cos2 = 0.f, cos3 = 0.f, cos4 = 0.f;
+
+			Math::GetSinCosRad(sin, cos, rad);
+			point.X = 16 * sin * sin * sin;
+
+			Math::GetSinCosRad(sin, cos2, 2 * rad);
+			Math::GetSinCosRad(sin, cos3, 3 * rad);
+			Math::GetSinCosRad(sin, cos4, 4 * rad);
+			point.Y = 13 * cos - 5 * cos2 - 2 * cos3 - cos4;
+
+			hearts.push_back(point);
 		}
 	}
 
 	for (auto const& v : hearts)
 	{
-		r.DrawPoint(v * 10.f, LinearColor::Blue);
+		r.DrawPoint((currentPosition + v) * scale, LinearColor::Blue);
 	}
 }
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
