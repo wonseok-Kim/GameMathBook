@@ -65,9 +65,9 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	// 게임 로직의 로컬 변수
 	static float moveSpeed = 100.f;
 
-	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis));
-	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
-
+	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
+	Vector2 deltaPosition = inputVector* moveSpeed * InDeltaSeconds;
+	
 	// 물체의 최종 상태 설정
 	currentPosition += deltaPosition;
 }
@@ -83,7 +83,16 @@ void SoftRenderer::Render2D()
 	DrawGizmo2D();
 
 	// 렌더링 로직의 로컬 변수
-
+	float radius = 50.f;
+	for (float iterX = -radius; iterX <= radius; iterX += 1.f)
+	{
+		for (float iterY = -radius; iterY <= radius; iterY += 1.f)
+		{
+			Vector2 point(iterX, iterY);
+			if (point.SizeSquared() <= radius * radius)
+				r.DrawPoint(currentPosition + point, LinearColor::Red);
+		}
+	}
 }
 
 // 메시를 그리는 함수
