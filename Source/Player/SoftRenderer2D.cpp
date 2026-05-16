@@ -101,7 +101,11 @@ void SoftRenderer::Render2D()
 	HSVColor hsv(0.f, 1.f, 0.85f);
 	for (auto const& v : squares)
 	{
-		r.DrawPoint(v, hsv.ToLinearColor());
+		Vector2 polarV = v.ToPolarCoordinate();
+		polarV.Y += Math::Deg2Rad(currentDegree) * (v.SizeSquared() * (1 / (100.f * 100.f)));
+
+		hsv.H = polarV.Y / Math::TwoPI;
+		r.DrawPoint(polarV.ToCartesianCoordinate(), hsv.ToLinearColor());
 	}
 
 	// 현재 각도를 화면에 출력
@@ -110,10 +114,8 @@ void SoftRenderer::Render2D()
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
