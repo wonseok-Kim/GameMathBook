@@ -114,12 +114,20 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	float sin = 0.f;
+	float cos = 0.f;
+	Math::GetSinCos(sin, cos, currentDegree);
+	Matrix3x3 scaleMat(Vector3::UnitX * currentScale, Vector3::UnitY * currentScale, Vector3::UnitZ);
+	Matrix3x3 rotateMat(Vector3(cos, sin, 0.f), Vector3(-sin, cos, 0.f), Vector3::UnitZ);
+	Matrix3x3 moveMat(Vector3::UnitX, Vector3::UnitY, Vector3(currentPosition));
+	Matrix3x3 finalMat = moveMat * rotateMat * scaleMat;
+
 	// 각 값을 초기화한 후 동일하게 증가시키면서 색상 값을 지정
 	rad = 0.f;
 	for (auto const& v : hearts)
 	{
 		hsv.H = rad / Math::TwoPI;
-		r.DrawPoint(v, hsv.ToLinearColor());
+		r.DrawPoint(finalMat * v, hsv.ToLinearColor());
 		rad += increment;
 	}
 
