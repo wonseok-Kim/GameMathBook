@@ -102,11 +102,17 @@ void SoftRenderer::Render2D()
 	for (auto const& v : squares)
 	{
 		Vector2 polarV = v.ToPolarCoordinate();
-		polarV.Y += Math::Deg2Rad(currentDegree) * (v.SizeSquared() * (1 / (100.f * 100.f)));
+		float orgAngle = polarV.Y;
+		polarV.Y += Math::Deg2Rad(currentDegree) * (v.SizeSquared() / (halfSize * halfSize));
 
-		hsv.H = polarV.Y / Math::TwoPI;
+		if (orgAngle < 0.f)
+			hsv.H = (orgAngle + Math::TwoPI) * (1.f / Math::TwoPI);
+		else
+			hsv.H = (orgAngle) * (1.f / Math::TwoPI);
+
+		assert(hsv.H >= 0.f && hsv.H <= 1.f);
 		r.DrawPoint(polarV.ToCartesianCoordinate(), hsv.ToLinearColor());
-	}
+	}	
 
 	// 현재 각도를 화면에 출력
 	r.PushStatisticText(std::string("Degree : ") + std::to_string(currentDegree));
