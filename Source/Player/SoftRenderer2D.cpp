@@ -114,14 +114,31 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	float cos = 0.f;
+	float sin = 0.f;
+	Math::GetSinCos(sin, cos, currentDegree);
+	Matrix2x2 scaleMat(Vector2::UnitX * currentScale, Vector2::UnitY * currentScale);
+	Matrix2x2 rotateMat(Vector2(cos, sin), Vector2(-sin, cos));
+	Matrix2x2 shearMat(Vector2::UnitX, Vector2(currentShear, 1.f));
+	Matrix2x2 finalMat = shearMat * rotateMat * scaleMat;
+
+	Matrix2x2 invScaleMat(Vector2(1.f / currentScale, 0.f), Vector2(0.f, 1.f / currentScale));
+	Matrix2x2 invRotateMat(Vector2(cos, -sin), Vector2(sin, cos));
+	Matrix2x2 invShearMat(Vector2::UnitX, Vector2(-currentShear, 1.f));
+	Matrix2x2 invFinalMat = invScaleMat * invRotateMat * invShearMat;
+
+
 	rad = 0.f;
 	for (auto const& v : hearts)
 	{
+		Vector2 transV = finalMat * v;
+		Vector2 invTransV = invFinalMat * transV;
+
 		// 왼쪽 하트
-		r.DrawPoint(v - pivot, hsv.ToLinearColor());
+		r.DrawPoint(transV - pivot, hsv.ToLinearColor());
 
 		// 오른쪽 하트
-		r.DrawPoint(v + pivot, hsv.ToLinearColor());
+		r.DrawPoint(invTransV + pivot, hsv.ToLinearColor());
 
 		hsv.H = rad / Math::TwoPI;
 		rad += increment;
