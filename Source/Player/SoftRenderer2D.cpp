@@ -100,9 +100,19 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
 	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
 
+	static float cosFovDevidedBy2 = cosf(Math::Deg2Rad(fovAngle / 2.f));
+	Vector2 playerForward(0.f, 1.f);
+	Vector2 dirTarget = targetPosition - playerPosition;
+	dirTarget.Normalize();
+
 	// 물체의 최종 상태 설정
 	playerColor = LinearColor::Gray;
 	targetColor = LinearColor::Blue;
+	if (dirTarget.Dot(playerForward) > cosFovDevidedBy2)
+	{
+		playerColor = LinearColor::Red;
+		targetColor = LinearColor::Red;
+	}
 	playerPosition += deltaPosition;
 }
 
@@ -161,10 +171,8 @@ void SoftRenderer::Render2D()
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
