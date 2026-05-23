@@ -54,8 +54,11 @@ void SoftRenderer::LoadScene2D()
 
 // 게임 로직과 렌더링 로직이 공유하는 변수
 Vector2 point(0.f, 250.f);
-Vector2 lineStart(-400.f, 0.f);
-Vector2 lineEnd(400.f, 0.f);
+//Vector2 lineStart(-400.f, 0.f);
+//Vector2 lineEnd(400.f, 0.f);
+Vector2 lineStart(-400.f, 65.64437);
+Vector2 lineEnd(400.f, -279.94409f);
+Vector2 lineDir = (lineEnd - lineStart).GetNormalize();
 
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
@@ -70,6 +73,23 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float currentDegree = 0.f;
 	static float rotateSpeed = 180.f;
 	static float distance = 250.f;
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_real_distribution<float> dist(-300.f, 300.f);
+
+	elapsedTime += InDeltaSeconds;
+	if (elapsedTime >= duration)
+	{
+		elapsedTime = 0.f;
+		lineStart.Y = dist(gen);
+		lineEnd.Y = dist(gen);
+		lineDir = (lineEnd - lineStart).GetNormalize();
+	}
+
+	float cos = 0.f, sin = 0.f;
+	currentDegree += rotateSpeed * InDeltaSeconds;
+	Math::GetSinCos(sin, cos, currentDegree);
+	point = Vector2(cos, sin) * distance;
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -109,14 +129,21 @@ void SoftRenderer::Render2D()
 	// 투영할 라인 그리기
 	r.DrawLine(lineStart, lineEnd, LinearColor::Black);
 	r.DrawLine(lineStart, point, LinearColor::Red);
+
+	Vector2 startToPoint = point - lineStart;
+	Vector2 projV = lineDir * startToPoint.Dot(lineDir);
+	Vector2 projPoint = lineStart + projV;
+	r.DrawLine(point, projPoint, LinearColor::Gray);
+	for (const auto& v : circle)
+	{
+		r.DrawPoint(v + projPoint, LinearColor::Blue);
+	}
 }
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
