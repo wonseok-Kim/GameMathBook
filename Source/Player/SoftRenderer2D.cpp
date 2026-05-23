@@ -54,6 +54,7 @@ void SoftRenderer::LoadScene2D()
 
 // 게임 로직과 렌더링 로직이 공유하는 변수
 Vector2 lightPosition(200.f, 0.f);
+float lightRad = 0.f;
 LinearColor lightColor;
 Vector2 circlePosition;
 
@@ -67,18 +68,12 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	// 게임 로직의 로컬 변수
 	static float duration = 20.f;
 	static float elapsedTime = 0.f;
-	static float currentDegree = 0.f;
-	static float lightDistance = 200.f;
-	static HSVColor lightHSVColor;
 
 	// 경과 시간에 따른 현재 각과 이를 사용한 [0,1]값의 생성
 	elapsedTime += InDeltaSeconds;
 	elapsedTime = Math::FMod(elapsedTime, duration);
-	float currentRad = (elapsedTime / duration) * Math::TwoPI;
-	float alpha = (sinf(currentRad) + 1) * 0.5f;
-
-	// [0,1]을 활용해 주기적으로 크기를 반복하기
-	currentDegree = Math::Lerp(0.f, 360.f, alpha);
+	lightRad = (elapsedTime / duration) * Math::TwoPI;
+	lightColor = HSVColor(lightRad / Math::TwoPI, 1.f, 1.f).ToLinearColor();
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -132,17 +127,27 @@ void SoftRenderer::Render2D()
 	}
 
 	// 광원 그리기
+	float cos = 0.f, sin = 0.f;
+	Math::GetSinCosRad(sin, cos, lightRad);
+	Matrix3x3 transMat{ Vector3(1, 0, lightPosition.X), Vector3(0, 1, lightPosition.Y), Vector3::UnitZ };
+	Matrix3x3 rotateMat{ Vector3(cos, sin, 0), Vector3(-sin, cos, 0), Vector3::UnitZ };
+	Vector2 finalVec = transMat * rotateMat * lightPosition;
+
 	static float lightLineLength = 50.f;
-	r.DrawLine(lightPosition, lightPosition - lightPosition.GetNormalize() * lightLineLength, lightColor);
+	r.DrawLine(finalVec, finalVec - finalVec.GetNormalize() * lightLineLength, lightColor);
 	for (auto const& v : light)
 	{
-		r.DrawPoint(v + lightPosition, lightColor);
+		r.DrawPoint(v + finalVec, lightColor);
 	}
 
 	// 광원을 받는 구체의 모든 픽셀에 NdotL을 계산해 음영을 산출하고 이를 최종 색상에 반영
 	for (auto const& v : circle)
 	{
-		r.DrawPoint(v, LinearColor::Black);
+		Vector2 normalV = v.GetNormalize();
+		Vector2 dirLight = (finalVec - v).GetNormalize();
+		float intensity = normalV.Dot(dirLight);
+		Math::Clamp(intensity, 0.f, 1.f);
+		r.DrawPoint(v, lightColor * intensity);
 	}
 
 	// 현재 조명의 위치를 화면에 출력
@@ -151,10 +156,8 @@ void SoftRenderer::Render2D()
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
