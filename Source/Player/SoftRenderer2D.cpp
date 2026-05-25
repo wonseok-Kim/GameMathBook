@@ -134,6 +134,8 @@ void SoftRenderer::Render2D()
 	Matrix3x3 finalMatrix = tMatrix * rMatrix * sMatrix;
 
 	// 행렬을 적용한 메시 정보를 사용해 물체를 렌더링
+	Vector2 leftBottom;
+	Vector2 rightTop;
 	static std::vector<Vertex2D> vertices(vertexCount);
 	for (size_t vi = 0; vi < vertexCount; ++vi)
 	{
@@ -144,9 +146,54 @@ void SoftRenderer::Render2D()
 	for (size_t ti = 0; ti < triangleCount; ++ti)
 	{
 		size_t bi = ti * 3;
-		r.DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 1]].Position, _WireframeColor);
-		r.DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 2]].Position, _WireframeColor);
-		r.DrawLine(vertices[indices[bi + 1]].Position, vertices[indices[bi + 2]].Position, _WireframeColor);
+		std::array<Vertex2D, 3> tv = { vertices[indices[bi]], vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
+
+		Vector2 minPos = Vector2{
+			Math::Min3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X),
+			Math::Min3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y)
+		};
+		Vector2 maxPos = Vector2{
+			Math::Max3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X),
+			Math::Max3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y)
+		};
+
+		Vector2 u = tv[1].Position - tv[0].Position;
+		Vector2 v = tv[2].Position - tv[0].Position;
+
+		float udotu = u.Dot(u);
+		float vdotv = v.Dot(v);
+		float udotv = u.Dot(v);
+		float denominator = udotv * udotv - udotu * vdotv;
+		if (denominator == 0.f)
+			continue;
+		float invDenominator = 1.f / denominator;
+
+		ScreenPoint leftBottom = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+		ScreenPoint rightTop = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+
+		leftBottom.X = Math::Max(0, leftBottom.X);
+		leftBottom.Y = Math::Min(_ScreenSize.Y, leftBottom.Y);
+		rightTop.X = Math::Min(_ScreenSize.X, rightTop.X);
+		rightTop.Y = Math::Max(0, rightTop.Y);
+
+		for (int x = leftBottom.X; x <= rightTop.X; ++x)
+		{
+			for (int y = rightTop.Y; y <= leftBottom.Y; ++y)
+			{
+				ScreenPoint fragment = ScreenPoint(x, y);
+				Vector2 pos = fragment.ToCartesianCoordinate(_ScreenSize);
+				Vector2 w = pos - tv[0].Position;
+
+				float wdotu = w.Dot(u);
+				float wdotv = w.Dot(v);
+
+				float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+				float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+				float oneMinusST = 1.f - s - t;	
+				if ((s >= 0.f && s <= 1.f) && (t >= 0.f && t <= 1.f) && (oneMinusST >= 0.f && oneMinusST <= 1.f))
+					r.DrawPoint(fragment, LinearColor::Blue);
+			}
+		}
 	}
 
 	// 현재 위치, 크기, 각도를 화면에 출력
@@ -157,10 +204,8 @@ void SoftRenderer::Render2D()
 
 // 메시를 그리는 함수
 void SoftRenderer::DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor)
-{
-}
+{}
 
 // 삼각형을 그리는 함수
 void SoftRenderer::DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
-{
-}
+{}
